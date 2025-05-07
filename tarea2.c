@@ -173,14 +173,17 @@ void buscar_por_id(Map *canciones_byid) {
 
 int main() 
 {
+  
   char opcion; 
   Map *canciones_byid = map_create(is_equal_str);
   Map *canciones_bygenres = map_create(is_equal_str);
   Map *canciones_byartist = map_create(is_equal_str);
   List *everySong = list_create();
+  
 
 
-  do {
+  do 
+  {
     mostrarMenuPrincipal();
     printf("Ingrese su opción: ");
     scanf(" %c", &opcion);
@@ -191,7 +194,7 @@ int main()
       break;
     case '2':
       buscar_por_id(canciones_byid);
-      break;
+      break; 
     case '3':
       buscar_por_artista(canciones_byartist);
       break;
@@ -211,3 +214,13 @@ int main()
 
   return 0;
 }
+
+/*gcc TDAS/*.c tarea2.c -Wno-unused-result -o tarea2*/ 
+
+/* codigo para crear ejecutable
+
+./tarea2
+
+codigo para correr el ejecutable
+
+*/
