@@ -3,50 +3,38 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define HASH_SIZE 100
+
 struct Map {
-  int (*lower_than)(void *key1, void *key2);
   int (*is_equal)(void *key1, void *key2);
-  List *ls;
+  size_t (*hash_function)(void *key);
+  List *buckets[HASH_SIZE];
 };
 
-typedef Map Map;
-
-// Variable global para almacenar la función de comparación actual
-int (*current_lt)(void *, void *) = NULL;
-
-int pair_lt(void *pair1, void *pair2) {
-  return (current_lt(((MapPair *)pair1)->key, ((MapPair *)pair2)->key));
+size_t default_hash(void *key) {
+  // Asume que las claves son cadenas de texto
+  char *str = (char *)key;
+  size_t hash = 0;
+  while (*str)
+    hash = hash * 31 + *str++;
+  return hash;
 }
 
-Map *sorted_map_create(int (*lower_than)(void *key1, void *key2)) {
-  Map *newMap = (Map *)malloc(sizeof(Map));
-  newMap->lower_than = lower_than;
-  newMap->is_equal = NULL;
-  newMap->ls = list_create();
-
-  return newMap;
+Map *map_create(int (*is_equal)(void *, void *)) {
+  Map *map = (Map *)malloc(sizeof(Map));
+  map->is_equal = is_equal;
+  map->hash_function = default_hash;
+  for (int i = 0; i < HASH_SIZE; i++)
+    map->buckets[i] = list_create();
+  return map;
 }
-
-Map *map_create(int (*is_equal)(void *key1, void *key2)) {
-  Map *newMap = (Map *)malloc(sizeof(Map));
-  newMap->lower_than = NULL;
-  newMap->is_equal = is_equal;
-  newMap->ls = list_create();
-
-  return newMap;
-}
-
 
 void multimap_insert(Map *map, void *key, void *value) {
+  size_t index = map->hash_function(key) % HASH_SIZE;
   MapPair *pair = (MapPair *)malloc(sizeof(MapPair));
   pair->key = key;
   pair->value = value;
-
-  if (map->lower_than) {
-    current_lt = map->lower_than;
-    list_sortedInsert(map->ls, pair, pair_lt);
-  } else
-    list_pushBack(map->ls, pair);
+  list_pushBack(map->buckets[index], pair);
 }
 
 void map_insert(Map *map, void *key, void *value) {
@@ -54,33 +42,53 @@ void map_insert(Map *map, void *key, void *value) {
   multimap_insert(map, key, value);
 }
 
-int _is_equal(Map *map, MapPair *pair, void *key) {
-  return ((map->is_equal && map->is_equal(pair->key, key)) ||
-          (map->lower_than && !map->lower_than(pair->key, key) &&
-           !map->lower_than(key, pair->key)));
-}
-
-MapPair *map_remove(Map *map, void *key) {
-  for (MapPair *pair = list_first(map->ls); pair != NULL;
-       pair = list_next(map->ls))
-    if (_is_equal(map, pair, key)) {
-      list_popCurrent(map->ls);
-      return pair;
-    }
-  return NULL;
-}
-
 MapPair *map_search(Map *map, void *key) {
-  for (MapPair *pair = list_first(map->ls); pair != NULL;
-       pair = list_next(map->ls)) {
-    if (_is_equal(map, pair, key))
+  size_t index = map->hash_function(key) % HASH_SIZE;
+  List *bucket = map->buckets[index];
+  for (MapPair *pair = list_first(bucket); pair != NULL; pair = list_next(bucket)) {
+    if (map->is_equal(pair->key, key))
       return pair;
   }
   return NULL;
 }
 
-MapPair *map_first(Map *map) { return list_first(map->ls); }
+MapPair *map_remove(Map *map, void *key) {
+  size_t index = map->hash_function(key) % HASH_SIZE;
+  List *bucket = map->buckets[index];
+  for (MapPair *pair = list_first(bucket); pair != NULL; pair = list_next(bucket)) {
+    if (map->is_equal(pair->key, key)) {
+      list_popCurrent(bucket);
+      return pair;
+    }
+  }
+  return NULL;
+}
 
-MapPair *map_next(Map *map) { return list_next(map->ls); }
+void map_clean(Map *map) {
+  for (int i = 0; i < HASH_SIZE; i++)
+    list_clean(map->buckets[i]);
+}
 
-void map_clean(Map *map) { list_clean(map->ls); }
+static int current_bucket = 0;
+
+MapPair *map_first(Map *map) {
+  current_bucket = 0;
+  while (current_bucket < HASH_SIZE) {
+    MapPair *pair = list_first(map->buckets[current_bucket]);
+    if (pair) return pair;
+    current_bucket++;
+  }
+  return NULL;
+}
+
+MapPair *map_next(Map *map) {
+  MapPair *pair = list_next(map->buckets[current_bucket]);
+  if (pair) return pair;
+  current_bucket++;
+  while (current_bucket < HASH_SIZE) {
+    pair = list_first(map->buckets[current_bucket]);
+    if (pair) return pair;
+    current_bucket++;
+  }
+  return NULL;
+}
