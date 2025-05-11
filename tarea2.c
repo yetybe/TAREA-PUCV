@@ -5,7 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct {
+typedef struct 
+{
   char id[100];
   char artists[100];
   char album_name[300];
@@ -13,6 +14,15 @@ typedef struct {
   float tempo;
   char genre[100];
 } Song;
+
+typedef struct 
+{
+  char nameLista[100];
+  List *cancionesLista;
+ 
+} ListaR;
+
+
 
 // Menú principal
 void mostrarMenuPrincipal() {
@@ -154,11 +164,64 @@ void buscar_por_id(Map *canciones_byid) {
   }
 }
 
-int main() {
+
+void buscar_por_tempo( List * songs)
+{
+  
+  char velocidad[100];
+  printf("Ingrese velocidad deseada (Lenta / Moderada / Rapida) : ");
+  scanf("%s" , velocidad);
+  if (strcmp(velocidad, "Lenta") != 0 &&
+    strcmp(velocidad, "Moderada") != 0 &&
+    strcmp(velocidad, "Rapida") != 0) 
+  {
+  printf("Velocidad no válida. Use 'Lenta', 'Moderada' o 'Rapida'.\n");
+  return;
+  }
+
+  Song * aux = list_first(songs);
+  int encontrada = 0;
+
+  while (aux != NULL) 
+  {
+    if ((strcmp(velocidad, "Lenta") == 0 && aux->tempo < 80) ||
+        (strcmp(velocidad, "Moderada") == 0 && aux->tempo >= 80 && aux->tempo <= 120) ||
+        (strcmp(velocidad, "Rapida") == 0 && aux->tempo > 120)) {
+      printf("ID: %s, Artista: %s, Album: %s, Canción: %s, Tempo: %.2f\n",
+             aux->id, aux->artists, aux->album_name, aux->track_name, aux->tempo);
+      encontrada = 1;
+    }
+    aux = list_next(songs);
+  }
+
+  if (!encontrada) 
+  {
+    printf("No se encontraron canciones con esa velocidad.\n");
+  }
+}
+
+
+void crearLista(Map * listas)
+{
+  char nombre[100];
+  printf("Ingrese el nombre de la lista de reproduccion :");
+  scanf("%s" , nombre);
+  ListaR *listaUsuario = malloc(sizeof(ListaR));
+  strcpy(listaUsuario->nameLista, nombre);
+  listaUsuario->cancionesLista = list_create();  
+  map_insert(listas , listaUsuario->nameLista , listaUsuario );
+  printf("\nSu lista de reproduccion ha sido creada con exito!");
+
+}
+
+
+int main() 
+{
   char opcion;
   Map *canciones_byid = map_create(is_equal_str);
   Map *canciones_bygenres = map_create(is_equal_str);
   Map *canciones_byartist = map_create(is_equal_str);
+  Map *listasDeReproduccion = map_create(is_equal_str);
   List *everySong = list_create();
 
   do {
@@ -177,9 +240,11 @@ int main() {
         buscar_por_artista(canciones_byartist);
         break;
       case '4':
-        buscar_por_id(canciones_byid);
+        buscar_por_tempo(everySong);
         break;
       case '5':
+        crearLista(listasDeReproduccion);
+        
         break;
       case '6':
         break;
@@ -200,6 +265,10 @@ int main() {
 /* codigo para crear ejecutable
 
 ./tarea2
+
+data/song_dataset_.csv
+
+Shiritsu Ebisu Chugaku
 
 codigo para correr el ejecutable
 
