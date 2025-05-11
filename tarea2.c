@@ -206,11 +206,16 @@ void crearLista(Map * listas)
   char nombre[100];
   printf("Ingrese el nombre de la lista de reproduccion :");
   scanf("%s" , nombre);
+  if (map_search(listas , nombre) != NULL)
+  {
+    printf("El nombre \"%s\" ya está en uso. Por favor, elija otro nombre para su lista de reproducción.\n", nombre);
+    return;
+  }
   ListaR *listaUsuario = malloc(sizeof(ListaR));
   strcpy(listaUsuario->nameLista, nombre);
   listaUsuario->cancionesLista = list_create();  
   map_insert(listas , listaUsuario->nameLista , listaUsuario );
-  printf("\nSu lista de reproduccion ha sido creada con exito!");
+  printf("Su lista de reproduccion ha sido creada con exito!\n");
 
 }
 
