@@ -331,7 +331,7 @@ void agregar_canciones(Map *canciones_byid, Map *lista_reproduccion)
 
   // Agrega la canción a la lista y notifica al usuario con un mensaje
   list_pushBack(lista, comprobar);
-  printf("Se añadio cancion a la lista '%s' :).\n", nameList);
+  printf("Se agrego cancion a la lista '%s' :).\n", nameList);
 }
 
 // Función para mostrar las canciones que contiene una lista de reproducción
