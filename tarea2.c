@@ -413,19 +413,6 @@ int main()
 
 
 
-/*   gcc TDAS/*.c tarea2.c -Wno-unused-result -o tarea2
-*/ 
-
-
-/*./tarea2
-
-data/song_dataset_.csv
-
-Shiritsu Ebisu Chugaku
-
-codigo para correr el ejecutable
-
-*/
 
 
 
